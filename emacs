@@ -165,6 +165,10 @@
 (require-when-exist
   (require 'w3m-load))
 
+(require-when-exist
+  (require 'undo-tree)
+  (undo-tree-mode))
+
 ;; insert evaluated values following the literal `;=>'
 (require-when-exist
   (require 'lispxmp)

@@ -25,12 +25,7 @@
 ;;when show the files (/etc/hosts, /var/log/http.conf, et al)
 (require 'generic-x)
 
-;; add a repository to a repository alist of `package-list-packages'
-(require 'package)
-(add-to-list 'package-archives
-    '("marmalade" .
-      "http://marmalade-repo.org/packages/"))
-(package-initialize)
+
 
 (defun os-is (name)
   (string-match name system-configuration))
@@ -154,6 +149,14 @@
   ;(ad-disable-advice 'switch-to-buffer-other-window 'around 'display-customize)
   ;(ad-activate 'switch-to-buffer-other-window)
   (define-key global-map (kbd "C-x C-z") 'open-junk-file-here))
+
+;; add a repository to a repository alist of `package-list-packages'
+(require-when-exist
+ (require 'package)
+ (add-to-list 'package-archives
+	      '("marmalade" .
+		"http://marmalade-repo.org/packages/"))
+ (package-initialize))
 
 
 ;;Instead of adding a number to the buffer name,

@@ -99,6 +99,12 @@
   ("C-x p" (lambda () (interactive) (other-window -1)))
   ;("C-M-SPC" 'mark-sexp)
   ("C-o" (lambda () (interactive) (other-window 1)))
+  ("M-%" 'query-replace-regexp)
+  ("C-M-%" 'query-replace)
+  ("C-s" 'isearch-forward-regexp)
+  ("C-M-s" 'isearch-forward)
+  ("C-r" 'isearch-backward-regexp)
+  ("C-M-r" 'isearch-barrier)
   )
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
  

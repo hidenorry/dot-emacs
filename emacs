@@ -121,6 +121,11 @@
 (setq-default tab-width 2 indent-tabs-mode nil)
 (global-font-lock-mode t)
 
+;; show line feed code
+(setq eol-mnemonic-dos "(CRLF)")
+(setq eol-mnemonic-mac "(CR)")
+(setq eol-mnemonic-unix "(LF)")
+
 ;; color setting for rgexp
 (set-face-foreground 'font-lock-regexp-grouping-backslash "green3")
 (set-face-foreground 'font-lock-regexp-grouping-construct "green")

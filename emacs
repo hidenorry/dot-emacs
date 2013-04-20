@@ -78,6 +78,7 @@
       comint-input-ignoredups t  ;ignore duplicates in a history
       comint-completion-addsuffix t 
       comint-completion-autolist t
+      eshell-cmpl-cycle-completions nil
       eshell-cmpl-cycle-cutoff-length 1
       )
 

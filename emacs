@@ -145,7 +145,7 @@
        (if (locate-library ,lib-name)
            (progn ,reqlis
                   ,@body)
-         (format "cannot find `%s' and skip it." ,lib-name)))))
+         (message (format "cannot find `%s' and skip it." ,lib-name))))))
 
 (require-when-exist
   (require 'open-junk-file)

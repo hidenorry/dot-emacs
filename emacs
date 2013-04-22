@@ -53,13 +53,18 @@
 (setq scroll-conservatively 35
       scroll-margin 0
       scroll-step 1)
-(setq comint-scroll-show-maximum-output t ; for eshell-mode
+;; eshell-mode settings
+(setq comint-scroll-show-maximum-output t
       comint-input-ignoredups t  ;ignore duplicates in a history
+      eshell-history-size 1024
+      eshell-scroll-to-bottom-on-output t
+      eshell-scroll-show-maximum-output t
       comint-completion-addsuffix t 
       comint-completion-autolist t
       eshell-cmpl-cycle-completions nil
-      eshell-cmpl-cycle-cutoff-length 1
+      eshell-cmpl-cycle-cutoff-length 100
       )
+
 
 (defmacro define-multiple-keys (mapname &rest difinitions)
   "define key settings of arbitary key-map"

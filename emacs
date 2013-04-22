@@ -40,7 +40,6 @@
                            (set-file-modes name (logior mode (logand (/ mode 4) 73)))
                            (message (concat "Wrote " name " (+x)"))))))))))
 
-
 ;;e-mail settings. call::"C-x m", send::"C-c C-c" kill::"C-c C-k"
 (setq user-mail-address "hidenorry@gmail.com"
       user-full-name "hidenorry"
@@ -190,7 +189,10 @@
 
 (require-when-exist
   (require 'popwin)
-  (setq display-buffer-function 'popwin:display-buffer))
+  (setq display-buffer-function 'popwin:display-buffer
+        ;;popwin:popup-window-width 80
+        popwin:popup-window-height 10
+        popwin:popup-window-position 'bottom))
 
 (defmacro add-to-add-hook (hooks &rest body)
   `(progn

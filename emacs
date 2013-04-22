@@ -25,29 +25,8 @@
 ;;when show the files (/etc/hosts, /var/log/http.conf, et al)
 (require 'generic-x)
 
-
-
 (defun os-is (name)
   (string-match name system-configuration))
-(cond ((os-is "mingw")
-       (set-language-environment 'Japanese)           
-       (setenv "USERPROFILE" "C:/Users/emacs-home/")
-       (prefer-coding-system 'sjis-dos)
-       (add-elements-to-list initial-frame-alist
-         '(width . 145)
-         '(height . 27))
-       (add-hook 'after-init-hook
-                 (lambda ()
-                   ;; window configuration setteings
-                   (save-selected-window
-                     (slime)
-                     (delete-other-windows)
-                     (select-window (split-window-horizontally -60))
-                     (eshell))))
-       (setq default-frame-alist initial-frame-alist))
-      (t (prefer-coding-system 'utf-8)
-         (eshell)
-         (eshell 2)))
 
 (when (os-is "linux")
   (add-hook 'after-save-hook
@@ -504,3 +483,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;; start up 
+(cond ((os-is "mingw")
+       (set-language-environment 'Japanese)           
+       (setenv "USERPROFILE" "C:/Users/emacs-home/")
+       (prefer-coding-system 'sjis-dos)
+       (add-elements-to-list initial-frame-alist
+         '(width . 145)
+         '(height . 27))
+       (add-hook 'after-init-hook
+                 (lambda ()
+                   ;; window configuration setteings
+                   (save-selected-window
+                     (slime)
+                     (delete-other-windows)
+                     (select-window (split-window-horizontally -60))
+                     (eshell))))
+       (setq default-frame-alist initial-frame-alist))
+      (t (prefer-coding-system 'utf-8)
+         (eshell)
+         (eshell 2)))

@@ -163,6 +163,40 @@
 (require-when-exist
   (require 'w3m-load))
 
+;; org mode settings originating from 'Emacs technic bible'
+(require-when-exist
+  (require 'org)
+  (defun org-insert-upheading (arg)
+    "insert to upper level"
+    (interactive "P")
+    (org-insert-heading arg)
+    (cond ((org-on-heading-p) (org-do-promote))
+          ((org-at-item-p) (org-indent-item -1))))
+  (defun org-insert-heading-dwim (arg)
+    (interactive "p")
+    (case arg
+      (4  (org-insert-subheading nil))  ;C-u
+      (16 (org-insert-upheading nil))   ;C-u C-u
+      (t (org-insert-heading nil))))
+  (define-key org-mode-map (kbd "<C-return>") 'org-insert-heading-dwim)
+
+  ;;memoize
+  (org-remember-insinuate)
+  ;; for org file
+  (setq org-directory "~/mem/")
+  (setq org-default-notes-file (expand-file-name "memo.org" org-directory))
+  ;; for templete
+  (setq org-remember-templates
+        '(("Note" ?n "** %?\n   %i\n   %a\n   %t" nil "Inbox")
+          ("Todo" ?t "** TODO %?\n  %i\n  %a\n  %t" nil "Inbox")))
+  ;; Select template: [n]ote [t]odo
+  (global-set-key (kbd "M-g m") 'org-remember)
+
+  ;;hyper link
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  )
+
+
 (require-when-exist
   (require 'undo-tree)
   (undo-tree-mode))

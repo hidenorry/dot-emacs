@@ -25,12 +25,7 @@
 ;;when show the files (/etc/hosts, /var/log/http.conf, et al)
 (require 'generic-x)
 
-;; add a repository to a repository alist of `package-list-packages'
-(require 'package)
-(add-to-list 'package-archives
-    '("marmalade" .
-      "http://marmalade-repo.org/packages/"))
-(package-initialize)
+
 
 (defun os-is (name)
   (string-match name system-configuration))
@@ -83,6 +78,7 @@
       comint-input-ignoredups t  ;ignore duplicates in a history
       comint-completion-addsuffix t 
       comint-completion-autolist t
+      eshell-cmpl-cycle-completions nil
       eshell-cmpl-cycle-cutoff-length 1
       )
 
@@ -104,6 +100,12 @@
   ("C-x p" (lambda () (interactive) (other-window -1)))
   ;("C-M-SPC" 'mark-sexp)
   ("C-o" (lambda () (interactive) (other-window 1)))
+  ("M-%" 'query-replace-regexp)
+  ("C-M-%" 'query-replace)
+  ("C-s" 'isearch-forward-regexp)
+  ("C-M-s" 'isearch-forward)
+  ("C-r" 'isearch-backward-regexp)
+  ("C-M-r" 'isearch-barrier)
   )
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
  
@@ -119,6 +121,11 @@
 (setq large-file-warning-threshold (* 1024 1024 256)) ;256MB
 (setq-default tab-width 2 indent-tabs-mode nil)
 (global-font-lock-mode t)
+
+;; show line feed code
+(setq eol-mnemonic-dos "(CRLF)")
+(setq eol-mnemonic-mac "(CR)")
+(setq eol-mnemonic-unix "(LF)")
 
 ;; color setting for rgexp
 (set-face-foreground 'font-lock-regexp-grouping-backslash "green3")
@@ -138,7 +145,7 @@
        (if (locate-library ,lib-name)
            (progn ,reqlis
                   ,@body)
-         (format "cannot find `%s' and skip it." ,lib-name)))))
+         (message (format "cannot find `%s' and skip it." ,lib-name))))))
 
 (require-when-exist
   (require 'open-junk-file)
@@ -154,6 +161,14 @@
   ;(ad-disable-advice 'switch-to-buffer-other-window 'around 'display-customize)
   ;(ad-activate 'switch-to-buffer-other-window)
   (define-key global-map (kbd "C-x C-z") 'open-junk-file-here))
+
+;; add a repository to a repository alist of `package-list-packages'
+(require-when-exist
+ (require 'package)
+ (add-to-list 'package-archives
+	      '("marmalade" .
+		"http://marmalade-repo.org/packages/"))
+ (package-initialize))
 
 
 ;;Instead of adding a number to the buffer name,
@@ -198,6 +213,10 @@
   (global-set-key (kbd "C-c l") 'org-store-link)
   )
 
+
+(require-when-exist
+  (require 'undo-tree)
+  (undo-tree-mode))
 
 ;; insert evaluated values following the literal `;=>'
 (require-when-exist

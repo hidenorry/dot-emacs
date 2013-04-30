@@ -55,7 +55,9 @@
 ;; eshell-mode settings
 (setq comint-scroll-show-maximum-output t
       comint-input-ignoredups t  ;ignore duplicates in a history
-      eshell-history-size 1024
+      eshell-glob-include-dot-dot nil ; ../ is removed from results of *
+      eshell-history-file-name "~/.bash_history"
+      eshell-history-size 10000
       eshell-scroll-to-bottom-on-output t
       eshell-scroll-show-maximum-output t
       comint-completion-addsuffix t 

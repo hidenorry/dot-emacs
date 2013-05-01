@@ -53,6 +53,16 @@
       scroll-margin 0
       scroll-step 1)
 ;; eshell-mode settings
+;; load environment value
+(load-file (expand-file-name "~/.emacs.d/shellenv.el"))
+(dolist (path (reverse (split-string (getenv "PATH") ":")))
+  (add-to-list 'exec-path path))
+;; set eshell aliases
+(setq eshell-command-aliases-list
+      (append
+       (list
+        )
+       eshell-command-aliases-list))
 (setq comint-scroll-show-maximum-output t
       comint-input-ignoredups t  ;ignore duplicates in a history
       eshell-history-size 1024
@@ -62,6 +72,9 @@
       comint-completion-autolist t
       eshell-cmpl-cycle-completions nil
       eshell-cmpl-cycle-cutoff-length 100
+      eshell-cp-interactive-query t
+      eshell-rm-interactive-query t
+      eshell-mv-interactive-query t
       )
 
 

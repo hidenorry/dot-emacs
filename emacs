@@ -146,6 +146,24 @@
          (message (format "cannot find `%s' and skip it." ,lib-name))))))
 
 (require-when-exist
+  (require 'fold-dwim nil t)
+  (require 'hideshow nil t)
+  (let ((major-modes
+         '(emacs-lisp-mode-hook
+           scheme-mode-hook
+           lisp-mode-hook
+           fortran-mode-hook
+           c-mode-common-hook
+           python-mode-hook
+           php-mode-hook
+           css-mode-hook)))
+    (dolist (hook major-modes)
+      (add-hook hook 'hs-minor-mode)))
+  (global-set-key (kbd "<f7>")      'fold-dwim-toggle)
+  (global-set-key (kbd "<M-f7>")    'fold-dwim-hide-all)
+  (global-set-key (kbd "<S-M-f7>")  'fold-dwim-show-all))
+
+(require-when-exist
   (require 'open-junk-file)
   (defvar switch-to-buffer-other-window-display-function nil)
   (defadvice switch-to-buffer-other-window (around display-customize activate)

@@ -225,6 +225,20 @@
      )
     'enable-paredit-mode))
 
+(require-when-exist
+  (require 'haskell-mode)
+  (require 'haskell-cabal)
+  (add-to-list 'auto-mode-alist '("\\.hs$" . haskell-mode))
+  (add-to-list 'auto-mode-alist '("\\.lhs$" . literate-haskell-mode))
+  (add-to-list 'auto-mode-alist '("\\.cabal\\'" . haskell-cabal-mode))
+  ;;for #!/usr/bin/env runghc
+  (add-to-list 'interpreter-mode-alist '("runghc" . haskell-mode))     
+  ;;for #!/usr/bin/env runhaskell
+  (add-to-list 'interpreter-mode-alist '("runhaskell" . haskell-mode)) 
+  (autoload 'ghc-init "ghc" nil t)
+  (add-hook 'haskell-mode-hook
+            (lambda () (ghc-init))))
+
 ;; (require-when-exist
 ;;  (require 'bm)
 ;;  (setq-default bm-buffer-persistence nil)

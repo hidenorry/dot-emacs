@@ -25,29 +25,8 @@
 ;;when show the files (/etc/hosts, /var/log/http.conf, et al)
 (require 'generic-x)
 
-
-
 (defun os-is (name)
   (string-match name system-configuration))
-(cond ((os-is "mingw")
-       (set-language-environment 'Japanese)           
-       (setenv "USERPROFILE" "C:/Users/emacs-home/")
-       (prefer-coding-system 'sjis-dos)
-       (add-elements-to-list initial-frame-alist
-         '(width . 145)
-         '(height . 27))
-       (add-hook 'after-init-hook
-                 (lambda ()
-                   ;; window configuration setteings
-                   (save-selected-window
-                     (slime)
-                     (delete-other-windows)
-                     (select-window (split-window-horizontally -60))
-                     (eshell))))
-       (setq default-frame-alist initial-frame-alist))
-      (t (prefer-coding-system 'utf-8)
-         (eshell)
-         (eshell 2)))
 
 (when (os-is "linux")
   (add-hook 'after-save-hook
@@ -61,7 +40,6 @@
                            (set-file-modes name (logior mode (logand (/ mode 4) 73)))
                            (message (concat "Wrote " name " (+x)"))))))))))
 
-
 ;;e-mail settings. call::"C-x m", send::"C-c C-c" kill::"C-c C-k"
 (setq user-mail-address "hidenorry@gmail.com"
       user-full-name "hidenorry"
@@ -74,12 +52,33 @@
 (setq scroll-conservatively 35
       scroll-margin 0
       scroll-step 1)
-(setq comint-scroll-show-maximum-output t ; for eshell-mode
+;; eshell-mode settings
+;; load environment value
+(load-file (expand-file-name "~/.emacs.d/shellenv.el"))
+(dolist (path (reverse (split-string (getenv "PATH") ":")))
+  (add-to-list 'exec-path path))
+;; set eshell aliases
+(setq eshell-command-aliases-list
+      (append
+       (list
+        )
+       eshell-command-aliases-list))
+(setq comint-scroll-show-maximum-output t
       comint-input-ignoredups t  ;ignore duplicates in a history
+      eshell-glob-include-dot-dot nil ; ../ is removed from results of *
+      eshell-history-file-name "~/.bash_history"
+      eshell-history-size 10000
+      eshell-scroll-to-bottom-on-output t
+      eshell-scroll-show-maximum-output t
       comint-completion-addsuffix t 
       comint-completion-autolist t
-      eshell-cmpl-cycle-cutoff-length 1
+      eshell-cmpl-cycle-completions nil
+      eshell-cmpl-cycle-cutoff-length 100
+      eshell-cp-interactive-query t
+      eshell-rm-interactive-query t
+      eshell-mv-interactive-query t
       )
+
 
 (defmacro define-multiple-keys (mapname &rest difinitions)
   "define key settings of arbitary key-map"
@@ -146,7 +145,25 @@
        (if (locate-library ,lib-name)
            (progn ,reqlis
                   ,@body)
-         (format "cannot find `%s' and skip it." ,lib-name)))))
+         (message (format "cannot find `%s' and skip it." ,lib-name))))))
+
+(require-when-exist
+  (require 'fold-dwim nil t)
+  (require 'hideshow nil t)
+  (let ((major-modes
+         '(emacs-lisp-mode-hook
+           scheme-mode-hook
+           lisp-mode-hook
+           fortran-mode-hook
+           c-mode-common-hook
+           python-mode-hook
+           php-mode-hook
+           css-mode-hook)))
+    (dolist (hook major-modes)
+      (add-hook hook 'hs-minor-mode)))
+  (global-set-key (kbd "<f7>")      'fold-dwim-toggle)
+  (global-set-key (kbd "<M-f7>")    'fold-dwim-hide-all)
+  (global-set-key (kbd "<S-M-f7>")  'fold-dwim-show-all))
 
 (require-when-exist
   (require 'open-junk-file)
@@ -166,9 +183,10 @@
 ;; add a repository to a repository alist of `package-list-packages'
 (require-when-exist
  (require 'package)
- (add-to-list 'package-archives
-	      '("marmalade" .
-		"http://marmalade-repo.org/packages/"))
+ (dolist (repo '(("gnu" . "http://elpa.gnu.org/packages/")
+                 ("marmalade" . "http://marmalade-repo.org/packages/")
+                 ("melpa" . "http://melpa.milkbox.net/packages/")))
+   (add-to-list 'package-archives repo))
  (package-initialize))
 
 
@@ -180,6 +198,40 @@
 
 (require-when-exist
   (require 'w3m-load))
+
+;; org mode settings originating from 'Emacs technic bible'
+(require-when-exist
+  (require 'org)
+  (defun org-insert-upheading (arg)
+    "insert to upper level"
+    (interactive "P")
+    (org-insert-heading arg)
+    (cond ((org-on-heading-p) (org-do-promote))
+          ((org-at-item-p) (org-indent-item -1))))
+  (defun org-insert-heading-dwim (arg)
+    (interactive "p")
+    (case arg
+      (4  (org-insert-subheading nil))  ;C-u
+      (16 (org-insert-upheading nil))   ;C-u C-u
+      (t (org-insert-heading nil))))
+  (define-key org-mode-map (kbd "<C-return>") 'org-insert-heading-dwim)
+
+  ;;memoize
+  (org-remember-insinuate)
+  ;; for org file
+  (setq org-directory "~/mem/")
+  (setq org-default-notes-file (expand-file-name "memo.org" org-directory))
+  ;; for templete
+  (setq org-remember-templates
+        '(("Note" ?n "** %?\n   %i\n   %a\n   %t" nil "Inbox")
+          ("Todo" ?t "** TODO %?\n  %i\n  %a\n  %t" nil "Inbox")))
+  ;; Select template: [n]ote [t]odo
+  (global-set-key (kbd "M-g m") 'org-remember)
+
+  ;;hyper link
+  (global-set-key (kbd "C-c l") 'org-store-link)
+  )
+
 
 (require-when-exist
   (require 'undo-tree)
@@ -207,7 +259,10 @@
 
 (require-when-exist
   (require 'popwin)
-  (setq display-buffer-function 'popwin:display-buffer))
+  (setq display-buffer-function 'popwin:display-buffer
+        ;;popwin:popup-window-width 80
+        popwin:popup-window-height 10
+        popwin:popup-window-position 'bottom))
 
 (defmacro add-to-add-hook (hooks &rest body)
   `(progn
@@ -519,3 +574,24 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;; start up 
+(cond ((os-is "mingw")
+       (set-language-environment 'Japanese)           
+       (setenv "USERPROFILE" "C:/Users/emacs-home/")
+       (prefer-coding-system 'sjis-dos)
+       (add-elements-to-list initial-frame-alist
+         '(width . 145)
+         '(height . 27))
+       (add-hook 'after-init-hook
+                 (lambda ()
+                   ;; window configuration setteings
+                   (save-selected-window
+                     (slime)
+                     (delete-other-windows)
+                     (select-window (split-window-horizontally -60))
+                     (eshell))))
+       (setq default-frame-alist initial-frame-alist))
+      (t (prefer-coding-system 'utf-8)
+         (eshell)
+         (eshell 2)))

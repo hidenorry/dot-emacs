@@ -130,6 +130,8 @@
 (set-face-foreground 'font-lock-regexp-grouping-backslash "green3")
 (set-face-foreground 'font-lock-regexp-grouping-construct "green")
 
+(remove-hook 'kill-buffer-query-functions 'server-kill-buffer-query-function)
+
 ;;(which-func-mode 1)
 ;;(delete (assoc 'which-func-mode mode-line-format) mode-line-format)
 ;;(setq-default header-line-format '(which-func-mode "" which-func-format))

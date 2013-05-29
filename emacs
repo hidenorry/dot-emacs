@@ -181,9 +181,10 @@
 ;; add a repository to a repository alist of `package-list-packages'
 (require-when-exist
  (require 'package)
- (add-to-list 'package-archives
-	      '("marmalade" .
-		"http://marmalade-repo.org/packages/"))
+ (dolist (repo '(("gnu" . "http://elpa.gnu.org/packages/")
+                 ("marmalade" . "http://marmalade-repo.org/packages/")
+                 ("melpa" . "http://melpa.milkbox.net/packages/")))
+   (add-to-list 'package-archives repo))
  (package-initialize))
 
 

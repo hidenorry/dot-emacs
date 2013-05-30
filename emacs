@@ -292,7 +292,8 @@
   (add-to-list 'interpreter-mode-alist '("runhaskell" . haskell-mode)) 
   (autoload 'ghc-init "ghc" nil t)
   (add-hook 'haskell-mode-hook
-            (lambda () (ghc-init))))
+            (lambda () (ghc-init)))
+  (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation))
 
 ;; (require-when-exist
 ;;  (require 'bm)

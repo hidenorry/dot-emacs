@@ -351,7 +351,7 @@
     (let ((tag-file (concat default-directory "TAGS")))
       (unless (file-exists-p tag-file)
         (when (y-or-n-p "No TAGS file. Make it?")
-          (shell-command "etags *.[ch] *.scm *.f *.f90 *.el .*.el 2>/dev/null")))
+          (shell-command "etags *.[ch] *.scm *.f *.f90 *.el .*.el *.inc *.va 2>/dev/null")))
       (visit-tags-table tag-file))))
 
 

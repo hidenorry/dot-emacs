@@ -58,11 +58,11 @@
 (dolist (path (reverse (split-string (getenv "PATH") ":")))
   (add-to-list 'exec-path path))
 ;; set eshell aliases
-(setq eshell-command-aliases-list
-      (append
-       (list
-        )
-       eshell-command-aliases-list))
+;;(setq eshell-command-aliases-list
+;;      (append
+;;       (list
+;;        )
+;;       eshell-command-aliases-list))
 (setq comint-scroll-show-maximum-output t
       comint-input-ignoredups t  ;ignore duplicates in a history
       eshell-glob-include-dot-dot nil ; ../ is removed from results of *

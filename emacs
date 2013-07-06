@@ -405,6 +405,25 @@
 (define-key global-map (kbd "C-x r w") 'save-windows)
 (define-key global-map (kbd "C-x r q") 'load-windows)
 
+;; Open files or URL under the cursor by using emacsclient
+(defun my-open-at-point ()
+  "Ask /usr/bin/open to open the thing at or before point."
+  (interactive)
+  (require 'ffap)
+  (let ((file (or (ffap-url-at-point)
+                  (ffap-file-at-point))))
+    (unless (stringp file)
+      (error "No file or URL found"))
+    (when (file-exists-p (expand-file-name file))
+      (setq file (expand-file-name file)))
+    (message "Open: %s" file)
+    (start-process "open_ps" nil "emacsclient" file)))
+
+(global-set-key "\C-co" 'my-open-at-point)
+;; double click
+(global-set-key [double-mouse-1] 'my-open-at-point)
+(global-set-key [double-down-mouse-1] 'ignore) ; mouse-drag-region
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -366,6 +366,12 @@
     (set-read-only)))
 (add-hook 'find-file-hook 'gaussian-file)
 
+(defun verilog-file ()
+  "for verilog files"
+  (when (string-match "\\.\\(va\\|inc\\)$" buffer-file-name)
+    (verilog-mode)))
+(add-hook 'find-file-hook 'verilog-file)
+
 (defadvice find-function (after ad-find-function activate)
   (set-read-only))
 (defadvice find-tag (after ad-find-function activate)

@@ -22,7 +22,7 @@
 ;                (getenv "PATH")))
 
 ;; use generic-mode instead of fundamental mode
-;;when show the files (/etc/hosts, /var/log/http.conf, et al)
+;;when show the files (/etc/hosts, /var/log/http.conf, etc
 (require 'generic-x)
 
 (defun os-is (name)
@@ -55,8 +55,10 @@
 ;; eshell-mode settings
 ;; load environment value
 (load-file (expand-file-name "~/.emacs.d/shellenv.el"))
-(dolist (path (reverse (split-string (getenv "PATH") ":")))
+(setenv "PATH" (replace-regexp-in-string "//" "/" (getenv "PATH")))
+(dolist (path  (split-string (getenv "PATH") ":"))
   (add-to-list 'exec-path path))
+
 ;; set eshell aliases
 ;;(setq eshell-command-aliases-list
 ;;      (append
@@ -68,7 +70,7 @@
       eshell-glob-include-dot-dot nil ; ../ is removed from results of *
       eshell-history-file-name "~/.bash_history"
       eshell-history-size 10000
-      eshell-scroll-to-bottom-on-output t
+;;      eshell-scroll-to-bottom-on-output nil
       eshell-scroll-show-maximum-output t
       comint-completion-addsuffix t 
       comint-completion-autolist t
@@ -87,7 +89,9 @@
                       difinitions)))
 (define-multiple-keys global-map
   ("C-h" 'backward-delete-char)
-  ("C-x C-b" 'ibuffer)
+  ;; ("C-x C-b" 'ibuffer)
+  ("C-x b" 'anything-buffers-list)    
+  ("C-x C-b" 'anything-imenu)  
   ("C-x x C-c" 'save-buffers-kill-terminal)  
   ("C-x C-c" (lambda () (interactive) (values "dummy")))
   ("C-x x k" (lambda () (interactive) (kill-buffer (buffer-name))))
@@ -104,6 +108,8 @@
   ("C-M-s" 'isearch-forward)
   ("C-r" 'isearch-backward-regexp)
   ("C-M-r" 'isearch-barrier)
+  ("M-x" 'anything-M-x)
+  ("C-x C-f" 'anything-find-files)
   )
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
  
@@ -264,6 +270,25 @@
         popwin:popup-window-height 10
         popwin:popup-window-position 'bottom))
 
+(require-when-exist
+  (require 'esh-buf-stack)
+  (setup-eshell-buf-stack)
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (local-set-key
+               (kbd "M-q") 'eshell-push-command))))
+
+(require-when-exist
+  (require 'helm)
+  (require 'helm-files)
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (local-set-key (kbd "C-M-p") #'(lambda () (interactive) (recenter) (helm-eshell-history)))
+              (local-set-key (kbd "M-p") 'eshell-previous-matching-input-from-input)
+              (local-set-key (kbd "C-M-n") #'(lambda () (interactive) (recenter) (helm-esh-pcomplete))))))
+
+
+
 (defmacro add-to-add-hook (hooks &rest body)
   `(progn
      ,@(loop for hook in hooks
@@ -279,6 +304,11 @@
      'lisp-mode-hook
      )
     'enable-paredit-mode))
+
+
+(require-when-exist
+  (require 'math))
+
 
 
 
@@ -341,6 +371,18 @@
           (shell-command "etags *.[ch] *.scm *.f *.f90 *.el .*.el *.inc *.va 2>/dev/null")))
       (visit-tags-table tag-file))))
 
+(defadvice recenter-top-bottom (around recenter-customize activate)
+  (if (lexical-let ((arg (ad-get-args 0)))
+          (and (listp arg)
+               (listp (car arg))
+               (eq (caar arg) 4)))
+      (recenter 0) ; When recenter-top-bottom is called after C-u, recenter 0.
+    ad-do-it))
+
+(defadvice eshell/cd (after eshell-cd-customize activate)
+  (eshell/ls))
+;; (defadvice eshell-send-input (after eshell-send-input-customize activate)
+;;   (recenter))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -398,6 +440,50 @@
 (define-key global-map (kbd "C-x r w") 'save-windows)
 (define-key global-map (kbd "C-x r q") 'load-windows)
 
+;;; From: http://www.emacswiki.org/cgi-bin/wiki.pl/EshellEnhancedLS
+(eval-after-load "em-ls"
+  '(progn
+     ;; (defun ted-eshell-ls-find-file-at-point (point)
+     ;;          "RET on Eshell's `ls' output to open files."
+     ;;          (interactive "d")
+     ;;          (find-file (buffer-substring-no-properties
+     ;;                      (previous-single-property-change point 'help-echo)
+     ;;                      (next-single-property-change point 'help-echo))))
+     (defun pat-eshell-ls-find-file-at-mouse-click (event)
+       "Middle click on Eshell's `ls' output to open files.
+ From Patrick Anderson via the wiki."
+       (interactive "e")
+       (ted-eshell-ls-find-file-at-point (posn-point (event-end event))))
+     (defun ted-eshell-ls-find-file ()
+       (interactive)
+       (let ((fname (buffer-substring-no-properties
+                     (previous-single-property-change (point) 'help-echo)
+                     (next-single-property-change (point) 'help-echo))))
+         ;; Remove any leading whitespace, including newline that might
+         ;; be fetched by buffer-substring-no-properties
+         (setq fname (replace-regexp-in-string "^[ \t\n]*" "" fname))
+         ;; Same for trailing whitespace and newline
+         (setq fname (replace-regexp-in-string "[ \t\n]*$" "" fname))
+         (cond
+          ((equal "" fname)
+           (message "No file name found at point"))
+          (fname
+           (find-file fname)))))
+     (let ((map (make-sparse-keymap)))
+       ;;          (define-key map (kbd "RET")      'ted-eshell-ls-find-file-at-point)
+       ;;          (define-key map (kbd "<return>") 'ted-eshell-ls-find-file-at-point)
+       (define-key map (kbd "RET")      'ted-eshell-ls-find-file)
+       (define-key map (kbd "<return>") 'ted-eshell-ls-find-file)
+       (define-key map (kbd "<mouse-2>") 'pat-eshell-ls-find-file-at-mouse-click)
+       (defvar ted-eshell-ls-keymap map))
+     (defadvice eshell-ls-decorated-name (after ted-electrify-ls activate)
+       "Eshell's `ls' now lets you click or RET on file names to open them."
+       (add-text-properties 0 (length ad-return-value)
+                            (list 'help-echo "RET, mouse-2: visit this file"
+                                  'mouse-face 'highlight
+                                  'keymap ted-eshell-ls-keymap)
+                            ad-return-value)
+       ad-return-value)))
 ;; Open files or URL under the cursor by using emacsclient
 (defun my-open-at-point ()
   "Ask /usr/bin/open to open the thing at or before point."
@@ -410,12 +496,15 @@
     (when (file-exists-p (expand-file-name file))
       (setq file (expand-file-name file)))
     (message "Open: %s" file)
-    (start-process "open_ps" nil "emacsclient" file)))
+    ;; (start-process "open_ps" nil "emacsclient" file)
+    (find-file file)
+    ))
 
 (global-set-key "\C-co" 'my-open-at-point)
+;;(global-set-key (kbd "RET") 'my-open-at-point)
 ;; double click
-(global-set-key [double-mouse-1] 'my-open-at-point)
-(global-set-key [double-down-mouse-1] 'ignore) ; mouse-drag-region
+;; (global-set-key [double-mouse-1] 'my-open-at-point)
+;; (global-set-key [double-down-mouse-1] 'ignore) ; mouse-drag-region
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -433,6 +522,12 @@
    (run-scheme scheme-program-name))
   (other-window -1))
 (define-key global-map (kbd "C-c s") 'scheme-other-window)
+
+(font-lock-add-keywords 'scheme-mode 
+'(
+  (",|.*?|" . 'font-lock-variable-name-face)
+  (" $..*?\\( \\|)\\)" . 'font-lock-variable-name-face)))
+
 
 ;; ;;dictionary
 ;; (require 'auto-complete-config)
@@ -533,6 +628,19 @@
   (with-signal-handlers 1)
   (with-locking-mutex 1)
   (guard 1))
+;; (add-hook 'scheme-mode-hook
+;;           '(lambda ()
+;;              (font-lock-mode 1)
+;;              ; キーワード用にFaceを作成 (1)
+;;              (make-face 'emphasis-face)
+;;              (set-face-foreground 'emphasis-face "red")
+;;              ; キーワード定義 (2)
+;;              (setq font-lock-keywords
+;;                    (append
+;;                     '((",|\\(.*\\)|" 1 emphasis-face)
+;;                       ("device" 0 emphasis-face))
+;;                     font-lock-keywords))
+;;              (font-lock-fontify-buffer)))
 
 (global-font-lock-mode t)
 
@@ -564,6 +672,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;perl setteings
+(add-hook 'perl-mode-hook
+          #'(lambda () (flymake-mode)))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;haskell settings
 (require-when-exist
   (require 'haskell-mode)
@@ -579,6 +695,51 @@
   (add-hook 'haskell-mode-hook
             (lambda () (ghc-init)))
   (add-hook 'haskell-mode-hook 'turn-on-haskell-indentation))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;verilog settings
+(add-hook 'verilog-mode-hook
+ '(lambda ()
+    (define-multiple-keys verilog-mode-map
+      ("C-h" 'backward-delete-char)
+      ("C-x C-b" 'ibuffer)
+      ("C-x x C-c" 'save-buffers-kill-terminal)  
+      ("C-x C-c" (lambda () (interactive) (values "dummy")))
+      ("C-x x k" (lambda () (interactive) (kill-buffer (buffer-name))))
+      ("C-M-h"   (lambda () (interactive) (move-to-window-line 0)))
+      ("C-M-m"   (lambda () (interactive) (move-to-window-line nil)))
+      ("C-M-l"   (lambda () (interactive) (move-to-window-line -1)))
+      ;;("M-g" (lambda (x) (interactive "nLine: ") (goto-line x)))
+      ("C-x p" (lambda () (interactive) (other-window -1)))
+      ;;("C-M-SPC" 'mark-sexp)
+      ("C-o" (lambda () (interactive) (other-window 1)))
+      ("M-%" 'query-replace-regexp)
+      ("C-M-%" 'query-replace)
+      ("C-s" 'isearch-forward-regexp)
+      ("C-M-s" 'isearch-forward)
+      ("C-r" 'isearch-backward-regexp)
+      ("C-M-r" 'isearch-barrier)
+      )))
+
+ (add-to-list 'hs-special-modes-alist '(my-mode "{{{" "}}}" ...)) 
+;; doesn't work
+;; (add-hook 'verilog-mode-hook
+;;           '(lambda ()
+;;             (hs-minor-mode 1)))
+;; (let ((verilog-mode-hs-info
+;;        '(verilog-mode
+;;           "class\\|module\\|def\\|if\\|unless\\|case\\|while\\|until\\|for\\|begin\\|do"
+;;           "end"
+;;           "#"
+;;           forward-word
+;;           nil)))
+;;   (if (not (member verilog-mode-hs-info hs-special-modes-alist))
+;;       (setq hs-special-modes-alist
+;;             (cons verilog-mode-hs-info hs-special-modes-alist))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -58,6 +58,18 @@
 (dolist (path  (split-string (getenv "PATH") ":"))
   (add-to-list 'exec-path path))
 
+;; eshell prompt setttings
+;; (setq eshell-highlight-prompt t)
+(defun my-eshell-prompt ()
+  (concat "   "
+          (eshell/pwd)
+          (propertize "\n $ "
+                      'face '(:foreground "red")
+                      'read-only t
+                      'rear-nonsticky '(face read-only))))
+(setq eshell-prompt-function 'my-eshell-prompt)
+(setq eshell-prompt-regexp "^[^#$
+]* [#$] ")
 ;; set eshell aliases
 ;;(setq eshell-command-aliases-list
 ;;      (append
@@ -80,6 +92,21 @@
       eshell-mv-interactive-query t
       eshell-ask-to-save-history 'always
       )
+(setq eshell-visual-commands
+  '("vi" "vim"                          ; what is going on??
+    "screen" "top" "peco" "ssh"         ; ok, a valid program...
+    "less" "more"                       ; M-x view-file
+    "lynx" "ncftp"  "w3m"               ; w3.el, ange-ftp
+    "pine" "tin" "trn" "elm")           ; GNUS!!
+  )
+
+(require 'em-term)
+(defun eshell-exec-visual (&rest args)
+  (apply 'start-process
+         "eshell-exec-visual" " eshell-exec-visual"
+         "~/apl/rxvt/bin/urxvt"
+         "-title" "eshell-exec-visual" "-e" args)
+  nil)
 
 
 (define-multiple-keys global-map
@@ -105,7 +132,8 @@
   ("C-M-r" 'isearch-barrier)
   ("M-x" 'anything-M-x)
   ("C-x C-f" 'anything-find-files)
-  )
+  ("C-x C-k RET" 'kill-buffer)
+  ("C-x C-k m" 'kmacro-edit-macro))
 (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
  
 (show-paren-mode t)
@@ -145,6 +173,7 @@
   (let ((major-modes
          '(emacs-lisp-mode-hook
            scheme-mode-hook
+           gauche-mode-hook
            lisp-mode-hook
            fortran-mode-hook
            c-mode-common-hook
@@ -181,6 +210,9 @@
    (add-to-list 'package-archives repo))
  (package-initialize))
 
+(require-when-exist
+  (require 'moccur-edit))
+
 
 ;;Instead of adding a number to the buffer name,
 ;;adding a directory name if you make a new one.
@@ -190,6 +222,9 @@
 
 (require-when-exist
   (require 'w3m-load))
+
+(require-when-exist
+  (require 'all-ext))
 
 ;; org mode settings originating from 'Emacs technic bible'
 (require-when-exist
@@ -279,6 +314,7 @@
   (add-to-add-hook 
     ('emacs-lisp-mode-hook
      'scheme-mode-hook
+     'gauche-mode-hook
      'lisp-mode-hook
      )
     'enable-paredit-mode))
@@ -462,6 +498,7 @@
                                   'keymap ted-eshell-ls-keymap)
                             ad-return-value)
        ad-return-value)))
+
 ;; Open files or URL under the cursor by using emacsclient
 (defun my-open-at-point ()
   "Ask /usr/bin/open to open the thing at or before point."

@@ -61,7 +61,11 @@
 ;; eshell prompt setttings
 ;; (setq eshell-highlight-prompt t)
 (defun my-eshell-prompt ()
-  (concat "   "
+  (concat " "
+          (or
+           (getenv "HOSTNAME")
+           (substring (shell-command-to-string (executable-find "hostname")) 0 -1))
+          ":"
           (eshell/pwd)
           (propertize "\n $ "
                       'face '(:foreground "red")
